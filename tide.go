@@ -80,7 +80,8 @@ func getTideFromAPI() Tide {
 }
 
 func saveTide(ctx context.Context, client *firestore.Client, t Tide) error {
-	_, err := client.Collection("tide").Doc("one").Set(ctx, t)
+	ref := client.Collection("tide").NewDoc()
+	_, err := ref.Set(ctx, t)
 	if err != nil {
 		log.Printf("An error has occurred: %s", err)
 	}
