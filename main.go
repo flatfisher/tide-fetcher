@@ -1,13 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
 	"cloud.google.com/go/firestore"
-	"google.golang.org/appengine"
 )
 
 func main() {
@@ -32,10 +32,10 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	tide := getTideFromAPI()
 
 	// Save Tide
-	ctx := appengine.NewContext(r)
-	projectID := os.Getenv(appengine.AppID(ctx))
+	ctx := context.Background()
+	projectID := os.Getenv("GOOGLE_CLOUD_PROJECT")
 	if projectID == "" {
-		log.Fatalf("Set Firebase project ID via GCLOUD_PROJECT env variable.")
+		log.Fatalf("Set Firebase project ID via GOOGLE_CLOUD_PROJECT env variable.")
 	}
 	client, err := firestore.NewClient(ctx, projectID)
 	if err != nil {
