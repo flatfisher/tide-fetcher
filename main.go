@@ -5,6 +5,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"cloud.google.com/go/firestore"
+	"google.golang.org/appengine"
 )
 
 func main() {
@@ -24,5 +27,25 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	fmt.Fprint(w, "Hello, World!")
+
+	//Get Tide
+	tide := getTideFromAPI()
+
+	// Save Tide
+	ctx := appengine.NewContext(r)
+	projectID := os.Getenv(appengine.AppID(ctx))
+	if projectID == "" {
+		log.Fatalf("Set Firebase project ID via GCLOUD_PROJECT env variable.")
+	}
+	client, err := firestore.NewClient(ctx, projectID)
+	if err != nil {
+		log.Fatalf("Cannot create client: %v", err)
+	}
+	defer client.Close()
+
+	if err := saveTide(ctx, client, tide); err != nil {
+		log.Fatalf("Cannot save tide: %v", err)
+	}
+
+	fmt.Fprint(w, "Success")
 }
