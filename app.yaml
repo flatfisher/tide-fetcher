@@ -1,5 +1,5 @@
 runtime: go111
 service: tide-fetcher
 env_variables:
-  TIDE_URL: 'tide_url'
+  API_URL: 'tide_url'
   API_KEY: 'your_api_key'
