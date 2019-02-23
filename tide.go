@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"cloud.google.com/go/firestore"
 	"google.golang.org/genproto/googleapis/type/latlng"
 )
 
@@ -40,7 +42,7 @@ type TideTime struct {
 	Level int
 }
 
-func getTide() Tide {
+func getTideFromAPI() Tide {
 	url := os.Getenv("API_URL")
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -75,6 +77,14 @@ func getTide() Tide {
 	t.High = makeTides(t.HighTide, t.HighTideTime)
 	t.Low = makeTides(t.LowTide, t.LowTideTime)
 	return t
+}
+
+func saveTide(ctx context.Context, client *firestore.Client, t Tide) error {
+	_, err := client.Collection("tide").Doc("one").Set(ctx, t)
+	if err != nil {
+		log.Printf("An error has occurred: %s", err)
+	}
+	return err
 }
 
 func makeTides(tide []string, time []string) []TideTime {
