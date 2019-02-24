@@ -92,14 +92,16 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	projectID := os.Getenv("GOOGLE_CLOUD_PROJECT")
 	locationID := "asia-northeast1"
-	queueID := "tide"
+	queueID := "tide-request"
 	key := os.Getenv("REQUEST_KEY")
 	for _, v := range PORTS {
-		url := makePath(v.Latitude, v.Longitude, key)
-		_, err := createTask(projectID, locationID, queueID, url)
-		if err != nil {
-			log.Fatalf("createTask: %v", err)
-		}
+		go func(p Port) {
+			url := makePath(p.Latitude, p.Longitude, key)
+			_, err := createTask(projectID, locationID, queueID, url)
+			if err != nil {
+				log.Fatalf("createTask: %v", err)
+			}
+		}(v)
 	}
 	fmt.Fprint(w, "Create Tasks")
 }
@@ -108,5 +110,5 @@ func makePath(lat float64, lon float64, key string) string {
 	jst, _ := time.LoadLocation("Asia/Tokyo")
 	t := time.Now().In(jst)
 	date := t.Format("20060102")
-	return fmt.Sprintf("/v1/tide?date=%s&lat%f&lon=%f&key=%s", date, lat, lon, key)
+	return fmt.Sprintf("/v1/tide?date=%s&lat=%f&lon=%f&key=%s", date, lat, lon, key)
 }
