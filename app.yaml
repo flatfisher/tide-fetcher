@@ -1,5 +1,9 @@
 runtime: go111
 service: tide-fetcher
+handlers:
+- url: /v1/tide/tasks/.*
+  script: auto
+  login: admin
 env_variables:
   REQUEST_KEY: ''
   API_URL: ''
