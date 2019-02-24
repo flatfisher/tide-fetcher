@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 
 func main() {
 	http.HandleFunc("/", indexHandler)
+	http.HandleFunc("/v1/tide", getTideHandler)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -27,9 +29,32 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	fmt.Fprint(w, "Success")
+}
+
+func getTideHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/v1/tide" {
+		http.NotFound(w, r)
+		return
+	}
+
+	key := r.URL.Query().Get("key")
+	if key != os.Getenv("REQUEST_KEY") {
+		http.Error(w, "Invalid API Key", http.StatusBadRequest)
+		return
+	}
+
+	date := r.URL.Query().Get("date")
+	lat := r.URL.Query().Get("lat")
+	lon := r.URL.Query().Get("lon")
+
+	if (date == "") || (lat == "") || (lon == "") {
+		http.Error(w, "Needs required propaties", http.StatusBadRequest)
+		return
+	}
 
 	//Get Tide
-	tide := getTideFromAPI()
+	tide := getTideFromAPI(date, lat, lon)
 
 	// Save Tide
 	ctx := context.Background()
@@ -47,5 +72,12 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("Cannot save tide: %v", err)
 	}
 
-	fmt.Fprint(w, "Success")
+	//Create Json Response
+	body, err := json.Marshal(tide)
+	if err != nil {
+		log.Fatalf("Cannot create Json Response: %v", err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(body)
 }

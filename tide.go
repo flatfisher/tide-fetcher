@@ -42,7 +42,7 @@ type TideTime struct {
 	Level int
 }
 
-func getTideFromAPI() Tide {
+func getTideFromAPI(date string, lat string, lon string) Tide {
 	url := os.Getenv("API_URL")
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -53,9 +53,9 @@ func getTideFromAPI() Tide {
 
 	q := req.URL.Query()
 	q.Add("key", os.Getenv("API_KEY"))
-	q.Add("lat", "44.35")
-	q.Add("lon", "143.3666667")
-	q.Add("date", "20190201")
+	q.Add("date", date)
+	q.Add("lat", lat)
+	q.Add("lon", lon)
 	req.URL.RawQuery = q.Encode()
 
 	client := &http.Client{}
