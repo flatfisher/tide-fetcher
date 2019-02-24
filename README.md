@@ -11,5 +11,5 @@ $ gcloud app deploy queue.yaml
 ## Scheduler
 
 ```
-$ gcloud beta scheduler jobs create app-engine save-tide --schedule "30 00 * * *" --time-zone Asia/Tokyo --description "save tide to firestore" --service tide-fetcher --relative-url `/v1/tide/tasks`
+$ gcloud beta scheduler jobs create app-engine save-tide --schedule "30 00 * * *" --time-zone Asia/Tokyo --description "save tide to firestore" --service tide-fetcher --relative-url /v1/tide/tasks
 ```
