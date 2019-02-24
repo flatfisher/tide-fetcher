@@ -1,5 +1,5 @@
 queue:
-- name: tide
+- name: tide-request
   rate: 1/s
   target: tide-fetcher
   max_concurrent_requests: 10
