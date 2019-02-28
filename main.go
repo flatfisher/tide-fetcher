@@ -14,7 +14,7 @@ import (
 
 func main() {
 	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/v1/tide", getTideHandler)
+	http.HandleFunc("/v1/tide", saveTideHandler)
 	http.HandleFunc("/v1/tide/tasks", taskHandler)
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -34,7 +34,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Success")
 }
 
-func getTideHandler(w http.ResponseWriter, r *http.Request) {
+func saveTideHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/v1/tide" {
 		http.NotFound(w, r)
 		return
