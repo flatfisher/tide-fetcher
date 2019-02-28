@@ -62,22 +62,26 @@ func saveTideHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	projectID := os.Getenv("GOOGLE_CLOUD_PROJECT")
 	if projectID == "" {
-		log.Fatalf("Set Firebase project ID via GOOGLE_CLOUD_PROJECT env variable.")
+		http.Error(w, "Project Id", http.StatusInternalServerError)
+		return
 	}
 	client, err := firestore.NewClient(ctx, projectID)
 	if err != nil {
-		log.Fatalf("Cannot create client: %v", err)
+		http.Error(w, "Cannot connect client", http.StatusInternalServerError)
+		return
 	}
 	defer client.Close()
 
 	if err := saveTide(ctx, client, tide); err != nil {
-		log.Fatalf("Cannot save tide: %v", err)
+		http.Error(w, "Cannot save tide", http.StatusInternalServerError)
+		return
 	}
 
 	//Create Json Response
 	body, err := json.Marshal(tide)
 	if err != nil {
-		log.Fatalf("Cannot create Json Response: %v", err)
+		http.Error(w, "Cannot create Json Response", http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -99,7 +103,7 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 			url := makePath(p.Latitude, p.Longitude, key)
 			_, err := createTask(projectID, locationID, queueID, url)
 			if err != nil {
-				log.Fatalf("createTask: %v", err)
+				log.Printf("Error: cannot create task %v", err)
 			}
 		}(v)
 	}

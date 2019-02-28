@@ -42,11 +42,12 @@ type TideTime struct {
 	Level int
 }
 
-func getTideFromAPI(date string, lat string, lon string) Tide {
+func getTideFromAPI(date string, lat string, lon string) (Tide, error) {
+	var t Tide
 	url := os.Getenv("API_URL")
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Fatalf("Cannot prepare request: %v", err)
+		return t, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -61,22 +62,32 @@ func getTideFromAPI(date string, lat string, lon string) Tide {
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		log.Fatalf("Cannot request tide api: %v", err)
+		return t, err
 	}
 	defer res.Body.Close()
 
 	decoder := json.NewDecoder(res.Body)
-
-	var t Tide
 	err = decoder.Decode(&t)
 	if err != nil {
-		log.Fatalf("Cannot decode tide body: %v", err)
+		return t, err
 	}
 	t.Location = &latlng.LatLng{Latitude: t.Latitude, Longitude: t.Longitude}
-	t.Date = getDate(t.DateString)
-	t.High = makeTides(t.HighTide, t.HighTideTime)
-	t.Low = makeTides(t.LowTide, t.LowTideTime)
-	return t
+	d, err := getDate(t.DateString)
+	if err != nil {
+		return t, err
+	}
+	t.Date = d
+
+	high, err := makeTides(t.HighTide, t.HighTideTime)
+	if err != nil {
+		return t, err
+	}
+
+	low, err := makeTides(t.LowTide, t.LowTideTime)
+	if err != nil {
+		return t, err
+	}
+	return t, nil
 }
 
 func saveTide(ctx context.Context, client *firestore.Client, t Tide) error {
@@ -88,30 +99,38 @@ func saveTide(ctx context.Context, client *firestore.Client, t Tide) error {
 	return err
 }
 
-func makeTides(tide []string, time []string) []TideTime {
+func makeTides(tide []string, time []string) ([]TideTime, error) {
 	var tmp []TideTime
 	for i, v := range tide {
 		if v == "*" {
 			break
 		}
-		tmp = append(tmp, TideTime{Level: getInt(v), Time: getDate(time[i])})
+		t, err := getDate(time[i])
+		if err != nil {
+			return tmp, err
+		}
+		n, err := getInt(time[i])
+		if err != nil {
+			return tmp, err
+		}
+		tmp = append(tmp, TideTime{Level: n, Time: t})
 	}
-	return tmp
+	return tmp, nil
 }
 
-func getDate(dateStr string) time.Time {
+func getDate(dateStr string) (time.Time, error) {
 	RFC339 := "2006-01-02T15:04:05+09:00"
 	time, err := time.Parse(RFC339, dateStr)
 	if err != nil {
-		log.Fatalf("Cannot parse string date: %v", err)
+		return time, err
 	}
-	return time
+	return time, nil
 }
 
-func getInt(intStr string) int {
+func getInt(intStr string) (int, error) {
 	i, err := strconv.Atoi(intStr)
 	if err != nil {
-		log.Fatalf("Cannot parse string date: %v", err)
+		return i, err
 	}
-	return i
+	return i, nil
 }
