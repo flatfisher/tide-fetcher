@@ -56,7 +56,11 @@ func saveTideHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Get Tide
-	tide := getTideFromAPI(date, lat, lon)
+	tide, err := getTideFromAPI(date, lat, lon)
+	if err != nil {
+		http.Error(w, "Cannot getTideFromAPI", http.StatusInternalServerError)
+		return
+	}
 
 	// Save Tide
 	ctx := context.Background()
