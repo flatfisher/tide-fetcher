@@ -71,6 +71,7 @@ func getTideFromAPI(date string, lat string, lon string) (Tide, error) {
 	if err != nil {
 		return t, err
 	}
+
 	t.Location = &latlng.LatLng{Latitude: t.Latitude, Longitude: t.Longitude}
 	d, err := getDate(t.DateString)
 	if err != nil {
@@ -82,11 +83,14 @@ func getTideFromAPI(date string, lat string, lon string) (Tide, error) {
 	if err != nil {
 		return t, err
 	}
+	t.High = high
 
 	low, err := makeTides(t.LowTide, t.LowTideTime)
 	if err != nil {
 		return t, err
 	}
+	t.Low = low
+
 	return t, nil
 }
 
